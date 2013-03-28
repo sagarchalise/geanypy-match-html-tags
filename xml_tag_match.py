@@ -42,6 +42,7 @@ class TagMatchPlugin(geany.Plugin):
             if nt.nmhdr.code == geany.scintilla.UPDATE_UI or nt.nmhdr.code == geany.scintilla.KEY:
                 content = self.sci.get_contents(self.sci.get_length()+1)
                 editor.indicator_clear(geany.editor.INDICATOR_SEARCH)
+                editor.indicator_clear(1)
                 current_pos = self.sci.get_current_position()
                 import html_matcher
                 tags = html_matcher.get_tags(content, current_pos)
@@ -51,7 +52,9 @@ class TagMatchPlugin(geany.Plugin):
                         import itertools
                         if current_pos in itertools.chain(xrange(open_tag.start, open_tag.end), xrange(close_tag.start, close_tag.end)):
                             editor.indicator_set_on_range(geany.editor.INDICATOR_SEARCH, open_tag.start, open_tag.end)
+                            editor.indicator_set_on_range(1, open_tag.start, open_tag.end)
                             editor.indicator_set_on_range(geany.editor.INDICATOR_SEARCH, close_tag.start, close_tag.end)
+                            editor.indicator_set_on_range(1, close_tag.start, close_tag.end)
 
 def main():
     return 0
