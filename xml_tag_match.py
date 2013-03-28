@@ -52,9 +52,9 @@ class TagMatchPlugin(geany.Plugin):
                         import itertools
                         if current_pos in itertools.chain(xrange(open_tag.start, open_tag.end), xrange(close_tag.start, close_tag.end)):
                             editor.indicator_set_on_range(geany.editor.INDICATOR_SEARCH, open_tag.start, open_tag.end)
-                            editor.indicator_set_on_range(1, open_tag.start, open_tag.end)
+                            editor.indicator_set_on_range(1, open_tag.start+1, open_tag.end-1)
                             editor.indicator_set_on_range(geany.editor.INDICATOR_SEARCH, close_tag.start, close_tag.end)
-                            editor.indicator_set_on_range(1, close_tag.start, close_tag.end)
+                            editor.indicator_set_on_range(1, close_tag.start+2, close_tag.end-1)
 
 def main():
     return 0
