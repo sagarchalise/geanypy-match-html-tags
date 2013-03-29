@@ -22,6 +22,7 @@
 #  
 # 
 import geany
+import itertools
 
 class TagMatchPlugin(geany.Plugin):
 
@@ -33,28 +34,54 @@ class TagMatchPlugin(geany.Plugin):
     file_types = ('HTML', 'PHP', 'XML')
 
     def __init__(self):
-        geany.Plugin.__init__(self)
-        geany.signals.connect("editor-notify", self.onEditorNotify)
+        super(geany.Plugin, self).__init__()
+        geany.signals.connect("editor-notify", self.on_editor_notify)
 
-    def onEditorNotify(self, obj, editor, nt):
-        if geany.document.get_current().file_type.name in self.file_types:
+    @classmethod
+    def check_filetype(cls):
+        cur_file_type = geany.document.get_current().file_type.name 
+        if cur_file_type in cls.file_types:
+            return True
+        return False
+   
+    @staticmethod
+    def set_indicator(editor, indicators, ranges):
+        for indicator in indicators:
+            for key,value in ranges.items():
+                if indicator == 1:
+                    new_val = [value[0]+1, value[1]-1]
+                    if key == 'end':
+                        new_val[0] += 1 
+                    editor.indicator_set_on_range(indicator, *new_val)
+                else:
+                    editor.indicator_set_on_range(indicator, *value)
+    
+    @staticmethod
+    def do_tag_matching(content, pos):
+        import html_matcher
+        tags = html_matcher.get_tags(content, pos)
+        if tags and tags[0]:
+            return tags
+        else:
+            return (None, None)
+    
+    def on_editor_notify(self, g_obj, editor, nt):
+        if self.check_filetype():
             self.sci = editor.scintilla
-            if nt.nmhdr.code == geany.scintilla.UPDATE_UI or nt.nmhdr.code == geany.scintilla.KEY:
+            if nt.nmhdr.code in (geany.scintilla.UPDATE_UI, geany.scintilla.KEY):
                 content = self.sci.get_contents(self.sci.get_length()+1)
-                editor.indicator_clear(geany.editor.INDICATOR_SEARCH)
-                editor.indicator_clear(1)
+                indicators = (geany.editor.INDICATOR_SEARCH, 1)
+                for indicator in indicators:
+                    editor.indicator_clear(indicator)
                 current_pos = self.sci.get_current_position()
-                import html_matcher
-                tags = html_matcher.get_tags(content, current_pos)
-                if tags and tags[0]:
-                    open_tag, close_tag = tags
-                    if close_tag:
-                        import itertools
-                        if current_pos in itertools.chain(xrange(open_tag.start, open_tag.end), xrange(close_tag.start, close_tag.end)):
-                            editor.indicator_set_on_range(geany.editor.INDICATOR_SEARCH, open_tag.start, open_tag.end)
-                            editor.indicator_set_on_range(1, open_tag.start+1, open_tag.end-1)
-                            editor.indicator_set_on_range(geany.editor.INDICATOR_SEARCH, close_tag.start, close_tag.end)
-                            editor.indicator_set_on_range(1, close_tag.start+2, close_tag.end-1)
+                open_tag, close_tag = self.do_tag_matching(content, current_pos)
+                if close_tag:
+                    tag_positions = {'begin': (open_tag.start, open_tag.end),
+                                    'end': (close_tag.start, close_tag.end)} 
+                    check_position_range = itertools.chain(xrange(*tag_positions['begin']), xrange(*tag_positions['end']))
+                    if current_pos in check_position_range:
+                        self.set_indicator(editor, indicators, tag_positions)
+
 
 def main():
     return 0
