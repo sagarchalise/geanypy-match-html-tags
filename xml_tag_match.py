@@ -37,6 +37,10 @@ class TagMatchPlugin(geany.Plugin):
     
     def __init__(self):
         super(geany.Plugin, self).__init__()
+        try:
+            geany.bindings.register_binding("XML Matcher", "Go to match", self.go_to_tag_match)
+        except AttributeError:
+            geany.ui_utils.set_statusbar("GeanyPy was not compiled with keybindings support.")
         geany.signals.connect("editor-notify", self.on_editor_notify)
 
     @classmethod
@@ -65,23 +69,39 @@ class TagMatchPlugin(geany.Plugin):
             return tags
         else:
             return (None, None)
-    
+
+    def get_positions(self):
+        content = self.sci.get_contents(self.sci.get_length()+1)
+        current_pos = self.sci.get_current_position()
+        open_tag, close_tag = self.do_tag_matching(content, current_pos)
+        tag_positions = {}
+        if close_tag:
+            tag_positions = {'begin': (open_tag.start, open_tag.end),
+                           'end': (close_tag.start, close_tag.end)} 
+            check_position_range = itertools.chain(xrange(*tag_positions['begin']), xrange(*tag_positions['end']))
+            if current_pos in check_position_range:
+                return (True, current_pos, tag_positions)
+        return (False, current_pos, tag_positions)
+
+    def go_to_tag_match(self, key_id):
+        if self.check_filetype():
+            valid, cur_pos, tag_pos = self.get_positions()
+            if valid:
+                if cur_pos in xrange(*tag_pos['begin']):
+                    self.sci.set_current_position(tag_pos['end'][0])
+                elif cur_pos in xrange(*tag_pos['end']):
+                    self.sci.set_current_position(tag_pos['begin'][0])
+        
     def on_editor_notify(self, g_obj, editor, nt):
         if self.check_filetype():
             self.sci = editor.scintilla
             notification_codes = (geany.scintilla.UPDATE_UI, geany.scintilla.KEY)
             if nt.nmhdr.code in notification_codes:
-                content = self.sci.get_contents(self.sci.get_length()+1)
                 for indicator in self.indicators:
                     editor.indicator_clear(indicator)
-                current_pos = self.sci.get_current_position()
-                open_tag, close_tag = self.do_tag_matching(content, current_pos)
-                if close_tag:
-                    tag_positions = {'begin': (open_tag.start, open_tag.end),
-                                    'end': (close_tag.start, close_tag.end)} 
-                    check_position_range = itertools.chain(xrange(*tag_positions['begin']), xrange(*tag_positions['end']))
-                    if current_pos in check_position_range:
-                        self.set_indicator(editor, tag_positions)
+                valid, cur_pos, tag_pos = self.get_positions()
+                if valid:
+                    self.set_indicator(editor, tag_pos)
 
 
 def main():
