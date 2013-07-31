@@ -78,7 +78,7 @@ class TagMatchPlugin(geany.Plugin):
         if close_tag:
             tag_positions = {'begin': (open_tag.start, open_tag.end),
                            'end': (close_tag.start, close_tag.end)} 
-            check_position_range = itertools.chain(xrange(*tag_positions['begin']), xrange(*tag_positions['end']))
+            check_position_range = itertools.chain(xrange(*tag_positions['begin']), xrange(tag_positions['end'][0]+1, tag_positions['end'][1]))
             if current_pos in check_position_range:
                 return (True, current_pos, tag_positions)
         return (False, current_pos, tag_positions)
