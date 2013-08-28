@@ -22,6 +22,7 @@
 #  
 # 
 import geany
+from geanypy import Document
 import itertools
 
 class TagMatchPlugin(geany.Plugin):
@@ -45,7 +46,7 @@ class TagMatchPlugin(geany.Plugin):
 
     @classmethod
     def check_filetype(cls):
-        cur_file_type = geany.document.get_current().file_type.name 
+        cur_file_type = Document.current().filetype 
         if cur_file_type in cls.file_types:
             return True
         return False
