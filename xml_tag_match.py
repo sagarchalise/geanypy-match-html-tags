@@ -20,9 +20,9 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #  
-# 
+#
 import geany
-from geanypy import Document
+from geanypy import Document, status_message, bind_key
 import itertools
 
 class TagMatchPlugin(geany.Plugin):
@@ -39,9 +39,9 @@ class TagMatchPlugin(geany.Plugin):
     def __init__(self):
         super(geany.Plugin, self).__init__()
         try:
-            geany.bindings.register_binding("XML Matcher", "Go to match", self.go_to_tag_match)
+            bind_key("XML Matcher", "Go to match", self.go_to_tag_match)
         except AttributeError:
-            geany.ui_utils.set_statusbar("GeanyPy was not compiled with keybindings support.")
+            status_message("GeanyPy was not compiled with keybindings support.")
         geany.signals.connect("editor-notify", self.on_editor_notify)
 
     @classmethod
@@ -53,7 +53,7 @@ class TagMatchPlugin(geany.Plugin):
     
     def set_indicator(self, editor, ranges):
         for indicator in self.indicators:
-            for key,value in ranges.items():
+            for key, value in ranges.items():
                 if indicator == 1:
                     new_val = [value[0]+1, value[1]-1]
                     if key == 'end':
