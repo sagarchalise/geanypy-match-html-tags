@@ -89,9 +89,9 @@ class TagMatchPlugin(geany.Plugin):
             valid, cur_pos, tag_pos = self.get_positions()
             if valid:
                 if cur_pos in xrange(*tag_pos['begin']):
-                    self.sci.set_current_position(tag_pos['end'][0])
+                    self.sci.set_current_position(tag_pos['end'][0], True)
                 elif cur_pos in xrange(*tag_pos['end']):
-                    self.sci.set_current_position(tag_pos['begin'][0])
+                    self.sci.set_current_position(tag_pos['begin'][0], True)
         
     def on_editor_notify(self, g_obj, editor, nt):
         if self.check_filetype():
