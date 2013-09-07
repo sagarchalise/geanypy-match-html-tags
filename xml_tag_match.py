@@ -39,7 +39,7 @@ class TagMatchPlugin(geany.Plugin):
     def __init__(self):
         super(geany.Plugin, self).__init__()
         try:
-            bind_key("XML Matcher", "Go to match", self.go_to_tag_match)
+            bind_key("XML Matcher", "Go to match", self.go_to_tag_match, data=None)
         except AttributeError:
             status_message("GeanyPy was not compiled with keybindings support.")
         geany.signals.connect("editor-notify", self.on_editor_notify)
@@ -84,7 +84,7 @@ class TagMatchPlugin(geany.Plugin):
                 return (True, current_pos, tag_positions)
         return (False, current_pos, tag_positions)
 
-    def go_to_tag_match(self, key_id):
+    def go_to_tag_match(self, key_id, data=None):
         if self.check_filetype():
             valid, cur_pos, tag_pos = self.get_positions()
             if valid:
